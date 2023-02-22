@@ -1,0 +1,41 @@
+import java.sql.*;
+import javax.ws.rs.*;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+
+@Path("/players")
+public class PlayerResource {
+  @GET
+  @Produces(MediaType.APPLICATION_JSON)
+  public Response getPlayers() {
+    try {
+      // Set up database connection
+      Class.forName("oracle.jdbc.driver.OracleDriver");
+      String url = "jdbc:oracle:thin:@//localhost:1521/orcl";
+      String username = "your-username";
+      String password = "your-password";
+      Connection conn = DriverManager.getConnection(url, username, password);
+      
+      // Execute query to get player information
+      String sql = "SELECT player_id, name, surname FROM players";
+      PreparedStatement stmt = conn.prepareStatement(sql);
+      ResultSet rs = stmt.executeQuery();
+      
+      // Create JSON array of player information
+      JSONArray players = new JSONArray();
+      while (rs.next()) {
+        JSONObject player = new JSONObject();
+        player.put("playerId", rs.getInt("player_id"));
+        player.put("name", rs.getString("name"));
+        player.put("surname", rs.getString("surname"));
+        players.put(player);
+      }
+      
+      // Close database connection and return JSON array of player information
+      conn.close();
+      return Response.ok(players.toString()).build();
+    } catch (Exception e) {
+      return Response.serverError().build();
+    }
+  }
+}
